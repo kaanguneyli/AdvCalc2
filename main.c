@@ -894,14 +894,17 @@ char* parseAfterLeftStrip (char *side) {
 }
 void print(int num, char operation[], FILE *file) {
     switch (num) {
-        case 1:
-            fprintf(file, "\n");
+        case 0: //alloca
+            fprintf(file, "%%%s = alloca i32\n", items[0]);
             break;
-        case 2:
-            fprintf(file, "\n");
+        case 1: //store
+            fprintf(file, "store i32 %s, i32* %%%s\n", items[0], items[1]);
             break;
-        case 3:
-            fprintf(file, "\n");
+        case 2: //load
+            fprintf(file, "%%%s = load i32, is32* %%%s""\n", items[0], items[1]);
+            break;
+        case 3: //operation
+            fprintf(file, "%%%s = %s i32 %%%s, %%%s\n", items[0], items[1], items[2], items[3]);
             break;
         case 4:
             fprintf(file, "\n");
