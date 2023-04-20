@@ -979,7 +979,10 @@ int main(int argc, char* argv[]) {
 
 
             printf("%lld\n",ans); //İNCELENECEK
-            char items[1] = {ans};
+            int temp = snprintf(NULL,0,"%lld",ans);
+            char* temp2 = (char *) malloc(sizeof (char)*(temp+1));
+            snprintf(temp2,temp+1,"%lld",ans);
+            char* items[1] = {temp2};
             print(4, items, output);
             /**************************************************************/
 
@@ -987,7 +990,7 @@ int main(int argc, char* argv[]) {
     }
     fprintf(output, "ret i32 0\n}");
     if (globalerror) {
-        remove(out);
+       // remove(out);
     }
     fclose(input);
     fclose(output);
