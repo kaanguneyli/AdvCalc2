@@ -367,15 +367,18 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
 }
 /*****************************************/
 char* parseAfterLeftStrip (char *side);
-void main_function(char *nsRight);
-
 
 int main(int argc, char* argv[]) {
+    bool globalerror;
     bool error;
     bool equals;
     Map* HashMap = HashMap_construct();//this hashmap contains variables and their corresponding value
+    char *fileName = strdup(argv[0]);
+    char* out = malloc(sizeof(char )* (strlen(argv[0])+1));
+    snprintf(out,strlen(argv[0])+1,"%s.ll",strtok(fileName,"."));
     FILE *input = fopen(argv[0],"r");
-    FILE *output = fopen(argv[1],"w");
+    FILE *output = fopen(out,"w");
+    fprintf(output, "; ModuleID = 'advcalc2ir'\ndeclare i32 @printf(i8*, ...)\n@print.str = constant [4 x i8] c\"%%d\\0A\\00\"\n\ndefine i32 @main() {");
     enum State {ALLOCA = 0, STORE = 1, LOAD = 2, OPERATION = 3, PRINT = 4};
     char line[256];
     for (int lineNo=0; fgets(line, sizeof(line), input) != NULL; lineNo++) {
@@ -454,7 +457,8 @@ int main(int argc, char* argv[]) {
             p++;
         }
         if (par != 0 || error) { //if the number of parentheses don't match or any other gets detected, we raise error
-            fprintf(output, "Error on line %d!\n", lineNo);
+            printf("Error on line %d!\n", lineNo);
+            globalerror = true;
             continue;
         }
 
@@ -462,7 +466,8 @@ int main(int argc, char* argv[]) {
         right = strtok(NULL, "=");
         third = strtok(NULL, "=");
         if (third != NULL) { // if the input can be splitted more than once there is a error
-            fprintf(output, "Error on line %d!\n", lineNo);
+            printf("Error on line %d!\n", lineNo);
+            globalerror = true;
             continue;
         }
         char *variable;
@@ -481,18 +486,21 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             variable = strtok(left, " ");
             variable2 = strtok(NULL, " ");
             if (variable == NULL) {
                 // checks whether the LHS is empty or not
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
             }
             if (variable2 != NULL) {
                 // checks whether there is a space between chars in LHS
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             char *po = variable;
@@ -507,7 +515,8 @@ int main(int argc, char* argv[]) {
             if (strcmp(variable, "xor") == 0 || strcmp(variable, "ls") == 0 || strcmp(variable, "rs") == 0 ||
                 strcmp(variable, "lr") == 0 || strcmp(variable, "rr") == 0 || strcmp(variable, "not") == 0) {
                 // raise error when the variable name is a reserved word
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             int k = 0;
@@ -525,11 +534,11 @@ int main(int argc, char* argv[]) {
                 error = true;
             }
             if (error) {
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             char *nsRight = parseAfterLeftStrip(right);
-            //main_function(nsRight);
             char *p3 = nsRight;
             int type = 0; // 0=start / 1=string / 2=number / 3=operator / 4=function / 5 = open parenthesis / 6 = closed parenthesis
             int length3 = strlen(nsRight);
@@ -698,7 +707,8 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             /*************************************************************/
@@ -712,7 +722,8 @@ int main(int argc, char* argv[]) {
                 }
             }
             if(parentheses_error==1){
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             /*******/
@@ -723,7 +734,8 @@ int main(int argc, char* argv[]) {
             char *var = NULL;
             long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             char* items0 = malloc(sizeof  variable);
@@ -745,7 +757,8 @@ int main(int argc, char* argv[]) {
             // the differences are commented
             if (equals) {
                 // raise error if there is an equal sign in the input
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             int i = 0;
@@ -931,7 +944,8 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
 
@@ -946,7 +960,8 @@ int main(int argc, char* argv[]) {
                 }
             }
             if(parentheses_error==1){
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
             /*******/
@@ -957,15 +972,22 @@ int main(int argc, char* argv[]) {
             char *var = NULL;
             long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
-                fprintf(output, "Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
+                globalerror = true;
                 continue;
             }
 
 
             printf("%lld\n",ans); //İNCELENECEK
+            char items[1] = {ans};
+            print(4, items, output);
             /**************************************************************/
 
         }
+    }
+    fprintf(output, "ret i32 0\n}");
+    if (globalerror) {
+        remove(out);
     }
     fclose(input);
     fclose(output);
@@ -1000,7 +1022,4 @@ void print(int num, char* items[], FILE *file) {
             fprintf(file, "call i32 (i8*, ...) @printf(i8* getelementptr ([4 x i8], [4 x i8]* @print.str, i32 0, i32 0), i32 %%%s} )\n",items[0]);
             break;
     }
-}
-void main_function(char *ns) {
-
 }
