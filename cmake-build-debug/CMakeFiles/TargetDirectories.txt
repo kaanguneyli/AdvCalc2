@@ -1,0 +1,3 @@
+C:/Users/hasan/Documents/GitHub/AdvCalc2/cmake-build-debug/CMakeFiles/AdvCalc2.dir
+C:/Users/hasan/Documents/GitHub/AdvCalc2/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/hasan/Documents/GitHub/AdvCalc2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -7,7 +7,7 @@
 /*** Stack and HashMap**/
 #define MAP_CAPACITY 128
 #define stack_cap 256
-
+int globalVar = 0;
 typedef struct {
     //Stack element
     char *name;
@@ -53,6 +53,8 @@ typedef struct {
     int capacity;
 } Map;
 
+typedef struct Hashmap Hashmap;
+
 long long hash(char *key) {
     //calculates hash value of the key
     long long hash = 0;
@@ -96,6 +98,7 @@ long long get(Map *map, char *key) {
 }
 /*****/
 /**** Helper Functions ************************/
+void print(int num, char* items[],FILE *file);
 int isInt(char* key){
     //checks whether the given string is only consists of digits
     int var = 0;
@@ -132,7 +135,7 @@ int precedence(char* key){
     //higher the number means it has more priority
     if (strcmp(key, "not") == 0){
         return 6;
-    }else if (strcmp(key, "*") == 0){
+    }else if (strcmp(key, "*") == 0||strcmp(key, "/") == 0||strcmp(key, "%") == 0){
         return 5;
     }else if (strcmp(key, "+") == 0|| strcmp(key,"-")==0){
         return 4;
@@ -214,7 +217,7 @@ int push_to_stack(Stack* stack_operator,Stack* output,char* key){
     }
 }
 
-long long postfix(Stack *stack,int* hks_error){
+long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) {
     /*this function evaluates given stack of elements it stars by
      * popping one element and pops one or two element if the popped element
      * is function or operator
@@ -225,60 +228,147 @@ long long postfix(Stack *stack,int* hks_error){
     if(stack->size<0){
         *hks_error = 1;
         return 0;
-    }else if(isInt(temp)==0){
+    }else{
+        if(isInt(temp)==0){
         ans = atoll(temp);
+        int varSize = snprintf(NULL, 0, "%lld", ans);
+        varSize += 1; // Add 1 for null-terminator
+        *p = (char*) malloc(varSize * sizeof(char));
+        snprintf(*p, sizeof(*p), "%lld", ans);
         return ans;
-    }else if(strcmp("not",temp)==0){
-        ans =  ~(postfix(stack,hks_error));
-        return ans;
-    }else if(strcmp("*",temp)==0){
-        ans = postfix(stack,hks_error)*postfix(stack,hks_error);
-        return ans;
-    }else if(strcmp("-",temp)==0){
-        long long a = postfix(stack,hks_error);
-        long long b = postfix(stack,hks_error);
-        ans = b-a;
-        return ans;
-    }else if(strcmp("+",temp)==0){
-        ans= postfix(stack,hks_error)+postfix(stack,hks_error);
-        return ans;
-    }else if(strcmp("ls",temp)==0){
-        long long a = postfix(stack,hks_error);
-        long long b = postfix(stack,hks_error);
-        ans= b << a;
-        return ans;
-    }else if(strcmp("rs",temp)==0){
-        long long a = postfix(stack,hks_error);
-        long long b = postfix(stack,hks_error);
-        ans= b >> a;
-        return ans;
-    }else if(strcmp("lr",temp)==0){
-        long long a = postfix(stack,hks_error);
-        long long b = postfix(stack,hks_error);
-        ans=((b << a)|(b >> (64 - a)));
-        return ans;
-    }else if(strcmp("rr",temp)==0){
-        long long a = postfix(stack,hks_error);
-        long long b = postfix(stack,hks_error);
-        ans=((b >> a)|(b << (64 - a)));
-        return ans;
-    }else if(strcmp("&",temp)==0){
-        ans=(postfix(stack,hks_error)&postfix(stack,hks_error));
-        return ans;
-    }else if(strcmp("xor",temp)==0){
-        ans=(postfix(stack,hks_error)^postfix(stack,hks_error));
-        return ans;
-    }else if(strcmp("|",temp)==0){
-        ans=(postfix(stack,hks_error)|postfix(stack,hks_error));
-        return ans;
-    } else{
-        return 0;
+        }else{
+            int varSize = snprintf(NULL, 0, "%d", globalVar);
+            varSize += 1; // Add 1 for null-terminator
+            *p = (char*) malloc(varSize * sizeof(char));
+            snprintf(*p, sizeof(p), "%d", globalVar++);
+            char* p1=NULL;
+            char* p2=NULL;
+            if(isVar(temp)==0){
+                ans = get(map,temp);
+                char* items[2] = {*p,temp};
+                if(hks_error==0)print(2,items,file);
+                return ans;
+            }else if(strcmp("not",temp)==0){
+                ans =  ~(postfix(map, stack, hks_error, &p1,file));
+                char* items[4] = {*p,"xor",p1,"1"};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("*",temp)==0){
+                ans= postfix(map, stack, hks_error, &p1,file) * postfix(map, stack, hks_error, &p2,file);
+                char* items[4] = {*p,"mul",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("%",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans = b%a;
+                char* items[4] = {*p,"srem",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("/",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans = b/a;
+                char* items[4] = {*p, "sdiv", p1, p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("-",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans = b-a;
+                char* items[4] = {*p, "sub", p1, p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("+",temp)==0){
+                ans= postfix(map, stack, hks_error, &p1,file) + postfix(map, stack, hks_error, &p2,file);
+                char* items[4] = {*p,"add",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("ls",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans= b << a;
+                char* items[4] = {*p,"shl",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("rs",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans= b >> a;
+                char* items[4] = {*p,"lshr",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("lr",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans=((b << a)|(b >> (64 - a)));
+
+                char* items2[4] = {*p,"sub","64\0",p2};
+                if(hks_error==0)print(3,items2,file);
+
+                int varSize2 = snprintf(NULL, 0, "%d", globalVar);
+                varSize2 += 1; // Add 1 for null-terminator
+                char *var2 = (char*) malloc(varSize2 * sizeof(char));
+                snprintf(var2, sizeof(var2), "%d", globalVar++);
+                char* items3[4] = {var2,"shl",p1,p2};
+                if(hks_error==0)print(3,items3,file);
+
+                int varSize3 = snprintf(NULL, 0, "%d", globalVar);
+                varSize3 += 1; // Add 1 for null-terminator
+                char *var3 = (char*) malloc(varSize3 * sizeof(char));
+                snprintf(var3, sizeof(var3), "%d", globalVar++);
+                char* items[4] = {var3,"or",var2,var3};
+                if(hks_error==0)print(3,items,file);
+
+                return ans;
+            }else if(strcmp("rr",temp)==0){
+                long long a = postfix(map, stack, hks_error, &p2,file);
+                long long b = postfix(map, stack, hks_error, &p1,file);
+                ans=((b >> a)|(b << (64 - a)));
+
+                char* items2[4] = {*p,"sub","64\0",p2};
+                if(hks_error==0)print(3,items2,file);
+
+                int varSize2 = snprintf(NULL, 0, "%d", globalVar);
+                varSize2 += 1; // Add 1 for null-terminator
+                char *var2 = (char*) malloc(varSize2 * sizeof(char));
+                snprintf(var2, sizeof(var2), "%d", globalVar++);
+                char* items3[4] = {var2,"lshr",p1,p2};
+                if(hks_error==0)print(3,items3,file);
+
+                int varSize3 = snprintf(NULL, 0, "%d", globalVar);
+                varSize3 += 1; // Add 1 for null-terminator
+                char *var3 = (char*) malloc(varSize3 * sizeof(char));
+                snprintf(var3, sizeof(var3), "%d", globalVar++);
+                char* items[4] = {var3,"or",var2,var3};
+                if(hks_error==0)print(3,items,file);
+
+                return ans;
+            }else if(strcmp("&",temp)==0){
+                ans=(postfix(map, stack, hks_error, &p1,file) & postfix(map, stack, hks_error, &p2,file));
+                char* items[4] = {*p,"and",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("xor",temp)==0){
+                ans=(postfix(map, stack, hks_error, &p1,file) ^ postfix(map, stack, hks_error, &p2,file));
+                char* items[4] = {*p,"xor",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else if(strcmp("|",temp)==0){
+                ans=(postfix(map, stack, hks_error, &p1,file) | postfix(map, stack, hks_error, &p2,file));
+                char* items[4] = {*p,"or",p1,p2};
+                if(hks_error==0)print(3,items,file);
+                return ans;
+            }else{
+                return 0;
+            }
+        }
     }
 }
 /*****************************************/
 char* parseAfterLeftStrip (char *side);
 void main_function(char *nsRight);
-void print(int num, char operation[]);
+
 
 int main(int argc, char* argv[]) {
     bool error;
@@ -521,12 +611,7 @@ int main(int argc, char* argv[]) {
                             push(Funcs,item);
                         } else if (type == 1) {
                             //this code gets variables value from the Hashmap and puhses the value to the stack for further operations
-                            long long var = get(HashMap,item);
-                            char val[256];
-                            sprintf(val, "%lld", var);
-                            char *aaaaa = malloc(sizeof val);
-                            aaaaa = strcpy(aaaaa, val);
-                            push_to_stack(Operator,Output,aaaaa);
+                            push_to_stack(Operator,Output,item);
                         }
                     }
                     continue;
@@ -635,15 +720,22 @@ int main(int argc, char* argv[]) {
             if(Output->size==0){
                 continue; // continues if the input is empty
             }
-            long long ans = postfix(Output,&operation_error);//calculates the final value and returns error value
+            char *var = NULL;
+            long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
                 fprintf(output, "Error on line %d!\n", lineNo);
                 continue;
             }
-            char* temp_name = malloc(sizeof  variable);
-            strcpy(temp_name,variable);
-            put(HashMap,temp_name,ans);
-
+            char* items0 = malloc(sizeof  variable);
+            strcpy(items0,variable);
+            put(HashMap,items0,ans);
+            int items1size = snprintf(NULL, 0, "%lld", ans);
+            items1size += 1; // Add 1 for null-terminator
+            char* items1 = (char*) malloc(items1size* sizeof(char));
+            snprintf(items1, sizeof(items1),"%lld",ans);
+            char* items[2] = {items0,items1};
+            print(0,items,output);
+            print(1,items,output);
 
 
             /**************************************************************/
@@ -752,12 +844,7 @@ int main(int argc, char* argv[]) {
                             push(Funcs,item);
                         } else if (type == 1) {
                             //this code gets variables value from the Hashmap and puhses the value to the stack for further operations
-                            long long var = get(HashMap,item);
-                            char val[256];
-                            sprintf(val, "%lld", var);
-                            char *aaaaa = malloc(sizeof val);
-                            aaaaa = strcpy(aaaaa, val);
-                            push_to_stack(Operator,Output,aaaaa);
+                            push_to_stack(Operator,Output,item);
                         }
                     }
                     continue;
@@ -867,7 +954,8 @@ int main(int argc, char* argv[]) {
             if(Output->size==0){
                 continue; // continues if the input is empty
             }
-            long long ans = postfix(Output,&operation_error);//calculates the final value and returns error value
+            char *var = NULL;
+            long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
                 fprintf(output, "Error on line %d!\n", lineNo);
                 continue;
@@ -892,16 +980,16 @@ char* parseAfterLeftStrip (char *side) {
     }
     return equation;
 }
-void print(int num, char operation[], FILE *file) {
+void print(int num, char* items[], FILE *file) {
     switch (num) {
         case 0: //alloca
             fprintf(file, "%%%s = alloca i32\n", items[0]);
             break;
         case 1: //store
-            fprintf(file, "store i32 %s, i32* %%%s\n", items[0], items[1]);
+            fprintf(file, "store i32 %s, i32* %%%s\n", items[1], items[0]);
             break;
         case 2: //load
-            fprintf(file, "%%%s = load i32, is32* %%%s""\n", items[0], items[1]);
+            fprintf(file, "%%%s = load i32, i32* %%%s""\n", items[0], items[1]);
             break;
         case 3: //operation
             fprintf(file, "%%%s = %s i32 %%%s, %%%s\n", items[0], items[1], items[2], items[3]);
