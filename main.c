@@ -1031,7 +1031,7 @@ void print(int num, char* items[], FILE *file) {
             fprintf(file, "%%%s = %s i32 %%%s, %%%s\n", items[0], items[1], items[2], items[3]);
             break;
         case 4:
-            fprintf(file, "call i32 (i8*, ...) @printf(i8* getelementptr ([4 x i8], [4 x i8]* @print.str, i32 0, i32 0), i32 %%%s} )\n",items[0]);
+            fprintf(file, "call i32 (i8*, ...) @printf(i8* getelementptr ([4 x i8], [4 x i8]* @print.str, i32 0, i32 0), i32 %%%s )\n",items[0]);
             break;
     }
 }
