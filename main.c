@@ -373,15 +373,17 @@ int main(int argc, char* argv[]) {
     bool error;
     bool equals;
     Map* HashMap = HashMap_construct();//this hashmap contains variables and their corresponding value
-    char *fileName = strdup(argv[0]);
-    char* out = malloc(sizeof(char )* (strlen(argv[0])+1));
-    snprintf(out,strlen(argv[0])+1,"%s.ll",strtok(fileName,"."));
-    FILE *input = fopen(argv[0],"r");
-    FILE *output = fopen(out,"w");
+
+    char *fileName = strdup(argv[1]);
+    char* out = malloc(sizeof(char )* (strlen(argv[1])+1));
+    snprintf(out,strlen(argv[1])+1,"%s.ll",strtok(fileName,"."));
+    FILE *input = fopen(argv[1],"r");
+    //FILE *input = fopen("file.adv","r");
+    FILE *output = fopen(out,"ab+");
+    //FILE *output = fopen("file.ll","w");
     fprintf(output, "; ModuleID = 'advcalc2ir'\ndeclare i32 @printf(i8*, ...)\n@print.str = constant [4 x i8] c\"%%d\\0A\\00\"\n\ndefine i32 @main() {");
-    enum State {ALLOCA = 0, STORE = 1, LOAD = 2, OPERATION = 3, PRINT = 4};
     char line[256];
-    for (int lineNo=0; fgets(line, sizeof(line), input) != NULL; lineNo++) {
+    for (int lineNo=1; fgets(line, sizeof(line), input) != NULL; lineNo++) {
         Stack* Operator = Stack_construct();//holds operators in the process of reordering of the elements to obtain postfix notation
         Stack* Output = Stack_construct();//final stack that contains postfix notation of operation
         Stack* Funcs = Stack_construct();//holds functions in the process of reordering of the elements to obtain postfix notation
@@ -390,12 +392,18 @@ int main(int argc, char* argv[]) {
         char *third;
         error = false;
         equals = false;
+        char *str = "\n";
+        line[strlen(line)] = '\n';
+//        char *line = malloc(strlen(line1)+strlen(str)+1);
+//        strcat(line, line1);
+//        strcat(line, str);
         char *p = line;
         int par = 0;
         bool ch = false;
         bool sp = false;
         bool nu = false;
         // in this loop we traverse through the input
+
         while (*p != '\n') {
             if (*p == '=') {
             // when we see equals sign we approve that the input is an assignment input, this boolean will be used later
@@ -977,7 +985,6 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 
-
             printf("%lld\n",ans); //İNCELENECEK
             int temp = snprintf(NULL,0,"%lld",ans);
             char* temp2 = (char *) malloc(sizeof (char)*(temp+1));
@@ -988,9 +995,11 @@ int main(int argc, char* argv[]) {
 
         }
     }
+
     fprintf(output, "ret i32 0\n}");
+
     if (globalerror) {
-       // remove(out);
+        remove(out);
     }
     fclose(input);
     fclose(output);
