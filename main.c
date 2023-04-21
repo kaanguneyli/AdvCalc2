@@ -381,7 +381,7 @@ int main(int argc, char* argv[]) {
     //FILE *input = fopen("file.adv","r");
     FILE *output = fopen(out,"ab+");
     //FILE *output = fopen("file.ll","w");
-    fprintf(output, "; ModuleID = 'advcalc2ir'\ndeclare i32 @printf(i8*, ...)\n@print.str = constant [4 x i8] c\"%%d\\0A\\00\"\n\ndefine i32 @main() {");
+    fprintf(output, "; ModuleID = 'advcalc2ir'\ndeclare i32 @printf(i8*, ...)\n@print.str = constant [4 x i8] c\"%%d\\0A\\00\"\n\ndefine i32 @main() {\n");
     char line[256];
     for (int lineNo=1; fgets(line, sizeof(line), input) != NULL; lineNo++) {
         Stack* Operator = Stack_construct();//holds operators in the process of reordering of the elements to obtain postfix notation
