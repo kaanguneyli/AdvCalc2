@@ -134,16 +134,18 @@ int precedence(char* key){
     //returns order of precedence of given operator/function
     //higher the number means it has more priority
     if (strcmp(key, "not") == 0){
-        return 6;
+        return 7;
     }else if (strcmp(key, "*") == 0||strcmp(key, "/") == 0||strcmp(key, "%") == 0){
-        return 5;
+        return 6;
     }else if (strcmp(key, "+") == 0|| strcmp(key,"-")==0){
-        return 4;
+        return 5;
     }else if(strcmp(key, "ls") == 0|| strcmp(key,"rs")==0){
-        return 3;
+        return 4;
     }else if(strcmp(key, "&") == 0){
-        return 2;
+        return 3;
     }else if(strcmp(key, "xor") == 0){
+        return 2;
+    }else if(strcmp(key, "|") == 0){
         return 1;
     }else{
         return 0;
