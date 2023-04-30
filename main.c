@@ -306,21 +306,28 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans=((b << a)|(b >> (64 - a)));
 
-                char* items2[4] = {*p,"sub","64\0",p2};
+                int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
+                varSize3 += 2; // Add 1 for null-terminator
+                char *var3 = (char*) malloc(varSize3 * sizeof(char));
+                snprintf(var3, sizeof(var3), "%%s%d", globalVar++);
+                char* items2[4] = {var3,"sub","32\0",p2};
                 if(*hks_error==0)print(3,items2,file);
 
                 int varSize2 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize2 += 1; // Add 1 for null-terminator
+                varSize2 += 2; // Add 1 for null-terminator
                 char *var2 = (char*) malloc(varSize2 * sizeof(char));
-                snprintf(var2, sizeof(var2), "s%d", globalVar++);
+                snprintf(var2, sizeof(var2), "%%s%d", globalVar++);
                 char* items3[4] = {var2,"shl",p1,p2};
                 if(*hks_error==0)print(3,items3,file);
 
-                int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize3 += 1; // Add 1 for null-terminator
-                char *var3 = (char*) malloc(varSize3 * sizeof(char));
-                snprintf(var3, sizeof(var3), "s%d", globalVar++);
-                char* items[4] = {var3,"or",var2,var3};
+                int varSize4 = snprintf(NULL, 0, "s%d", globalVar);
+                varSize4 += 2; // Add 1 for null-terminator
+                char *var4 = (char*) malloc(varSize4 * sizeof(char));
+                snprintf(var4, sizeof(var4), "%%s%d", globalVar++);
+                char* items4[4] = {var4,"lshr",p1,var3};
+                if(*hks_error==0)print(3,items4,file);
+
+                char* items[4] = {*p,"or",var2,var4};
                 if(*hks_error==0)print(3,items,file);
 
                 return ans;
@@ -329,21 +336,29 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans=((b >> a)|(b << (64 - a)));
 
-                char* items2[4] = {*p,"sub","64\0",p2};
+                int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
+                varSize3 += 2; // Add 1 for null-terminator
+                char *var3 = (char*) malloc(varSize3 * sizeof(char));
+                snprintf(var3, sizeof(var3), "%%s%d", globalVar++);
+
+                char* items2[4] = {var3,"sub","32\0",p2};
                 if(*hks_error==0)print(3,items2,file);
 
                 int varSize2 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize2 += 1; // Add 1 for null-terminator
+                varSize2 += 2; // Add 1 for null-terminator
                 char *var2 = (char*) malloc(varSize2 * sizeof(char));
-                snprintf(var2, sizeof(var2), "s%d", globalVar++);
+                snprintf(var2, sizeof(var2), "%%s%d", globalVar++);
                 char* items3[4] = {var2,"lshr",p1,p2};
                 if(*hks_error==0)print(3,items3,file);
 
-                int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize3 += 1; // Add 1 for null-terminator
-                char *var3 = (char*) malloc(varSize3 * sizeof(char));
-                snprintf(var3, sizeof(var3), "s%d", globalVar++);
-                char* items[4] = {var3,"or",var2,var3};
+                int varSize4 = snprintf(NULL, 0, "s%d", globalVar);
+                varSize4 += 2; // Add 1 for null-terminator
+                char *var4 = (char*) malloc(varSize4 * sizeof(char));
+                snprintf(var4, sizeof(var4), "%%s%d", globalVar++);
+                char* items4[4] = {var4,"shl",p1,var3};
+                if(*hks_error==0)print(3,items4,file);
+
+                char* items[4] = {*p,"or",var2,var4};
                 if(*hks_error==0)print(3,items,file);
 
                 return ans;
@@ -468,7 +483,7 @@ int main(int argc, char* argv[]) {
             p++;
         }
         if (par != 0 || error) { //if the number of parentheses don't match or any other gets detected, we raise error
-            printf("1Error on line %d!\n", lineNo);
+            printf("Error on line %d!\n", lineNo);
             globalerror = true;
             continue;
         }
@@ -477,7 +492,7 @@ int main(int argc, char* argv[]) {
         right = strtok(NULL, "=");
         third = strtok(NULL, "=");
         if (third != NULL) { // if the input can be splitted more than once there is a error
-            printf("2Error on line %d!\n", lineNo);
+            printf("Error on line %d!\n", lineNo);
             globalerror = true;
             continue;
         }
@@ -497,7 +512,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                printf("3Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -505,12 +520,12 @@ int main(int argc, char* argv[]) {
             variable2 = strtok(NULL, " ");
             if (variable == NULL) {
                 // checks whether the LHS is empty or not
-                printf("4Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
             }
             if (variable2 != NULL) {
                 // checks whether there is a space between chars in LHS
-                printf("5Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -526,7 +541,7 @@ int main(int argc, char* argv[]) {
             if (strcmp(variable, "xor") == 0 || strcmp(variable, "ls") == 0 || strcmp(variable, "rs") == 0 ||
                 strcmp(variable, "lr") == 0 || strcmp(variable, "rr") == 0 || strcmp(variable, "not") == 0) {
                 // raise error when the variable name is a reserved word
-                printf("6Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -545,7 +560,7 @@ int main(int argc, char* argv[]) {
                 error = true;
             }
             if (error) {
-                printf("7Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -718,7 +733,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                printf("8Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -733,7 +748,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if(parentheses_error==1){
-                printf("9Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -749,7 +764,7 @@ int main(int argc, char* argv[]) {
             }
             long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
-                printf("10Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -772,7 +787,7 @@ int main(int argc, char* argv[]) {
             // the differences are commented
             if (equals) {
                 // raise error if there is an equal sign in the input
-                printf("11Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -959,7 +974,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if (error) {
-                printf("12Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -975,7 +990,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             if(parentheses_error==1){
-                printf("13Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
@@ -987,12 +1002,12 @@ int main(int argc, char* argv[]) {
             char *var = NULL;
             long long ans = postfix(HashMap, Output, &operation_error, &var,output);//calculates the final value and returns error value
             if(operation_error==1){
-                printf("14Error on line %d!\n", lineNo);
+                printf("Error on line %d!\n", lineNo);
                 globalerror = true;
                 continue;
             }
 
-            printf("%lld\n",ans); //İNCELENECEK
+            //printf("%lld\n",ans); //İNCELENECEK
             int temp = snprintf(NULL,0,"%lld",ans);
             char* temp2 = (char *) malloc(sizeof (char)*(temp+1));
             snprintf(temp2,temp+1,"%lld",ans);
