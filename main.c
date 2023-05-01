@@ -234,112 +234,113 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
         if(isInt(temp)==0){
         ans = atoll(temp);
         int varSize = snprintf(NULL, 0, "%lld", ans);
-        varSize += 1; // Add 1 for null-terminator
+        varSize += 1; // Add 2 for null-terminator and s at the beginning of the variable 
         *p = (char*) malloc(varSize * sizeof(char));
         snprintf(*p, sizeof(*p), "%lld", ans);
         return ans;
         }else{
             int varSize = snprintf(NULL, 0, "s%d", globalVar);
-            varSize += 2; // Add 1 for null-terminator
+            varSize += 2; // Add 2 for null-terminator and s at the beginning of the variable 
             *p = (char*) malloc(varSize * sizeof(char));
             snprintf(*p, sizeof(p), "%%s%d", globalVar++);
-            char* p1=NULL;
-            char* p2=NULL;
+            char* p1=NULL; //pointers to operands of current operation
+            char* p2=NULL; //these two are not used if an integer is going to be returned instead of the result of an operation
+            //global var is used to track the names of variables
             if(isVar(temp)==0&&is_Func(temp)!=0){
                 ans = get(map,temp,hks_error);
-                if(*hks_error==1){
+                if(*hks_error==1){ // error check
                     return 0;
                 }
                 char* items[2] = {*p,temp};
-                if(*hks_error==0)print(2,items,file);
+                if(*hks_error==0)print(2,items,file); //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("not",temp)==0){
                 ans =  ~(postfix(map, stack, hks_error, &p1,file));
-                char* items[4] = {*p,"xor",p1,"-1"};
-                if(*hks_error==0)print(3,items,file);
+                char* items[4] = {*p,"xor",p1,"-1"}; 
+                if(*hks_error==0)print(3,items,file); //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("*",temp)==0){
                 ans= postfix(map, stack, hks_error, &p1,file) * postfix(map, stack, hks_error, &p2,file);
                 char* items[4] = {*p,"mul",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("%",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans = b%a;
                 char* items[4] = {*p,"srem",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("/",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans = b/a;
                 char* items[4] = {*p, "sdiv", p1, p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("-",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans = b-a;
-                char* items[4] = {*p, "sub", p1, p2};
+                char* items[4] = {*p, "sub", p1, p2};  //llvm code line is printed to the file
                 if(*hks_error==0)print(3,items,file);
                 return ans;
             }else if(strcmp("+",temp)==0){
                 ans= postfix(map, stack, hks_error, &p1,file) + postfix(map, stack, hks_error, &p2,file);
                 char* items[4] = {*p,"add",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("ls",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans= b << a;
                 char* items[4] = {*p,"shl",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("rs",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans= b >> a;
                 char* items[4] = {*p,"lshr",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
                 return ans;
             }else if(strcmp("lr",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans=((b << a)|(b >> (64 - a)));
-
+                //lr has to be implemented manually since there is no built-in rotation in llvm
                 int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize3 += 2; // Add 1 for null-terminator
+                varSize3 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var3 = (char*) malloc(varSize3 * sizeof(char));
                 snprintf(var3, sizeof(var3), "%%s%d", globalVar++);
                 char* items2[4] = {var3,"sub","32\0",p2};
-                if(*hks_error==0)print(3,items2,file);
+                if(*hks_error==0)print(3,items2,file); //llvm code line is printed to the file
 
                 int varSize2 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize2 += 2; // Add 1 for null-terminator
+                varSize2 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var2 = (char*) malloc(varSize2 * sizeof(char));
                 snprintf(var2, sizeof(var2), "%%s%d", globalVar++);
                 char* items3[4] = {var2,"shl",p1,p2};
-                if(*hks_error==0)print(3,items3,file);
+                if(*hks_error==0)print(3,items3,file); //llvm code line is printed to the file
 
                 int varSize4 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize4 += 2; // Add 1 for null-terminator
+                varSize4 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var4 = (char*) malloc(varSize4 * sizeof(char));
                 snprintf(var4, sizeof(var4), "%%s%d", globalVar++);
                 char* items4[4] = {var4,"lshr",p1,var3};
-                if(*hks_error==0)print(3,items4,file);
+                if(*hks_error==0)print(3,items4,file); //llvm code line is printed to the file
 
                 char* items[4] = {*p,"or",var2,var4};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);  //llvm code line is printed to the file
 
                 return ans;
             }else if(strcmp("rr",temp)==0){
                 long long a = postfix(map, stack, hks_error, &p2,file);
                 long long b = postfix(map, stack, hks_error, &p1,file);
                 ans=((b >> a)|(b << (64 - a)));
-
+                //rr has to be implemented manually since there is no built-in rotation in llvm
                 int varSize3 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize3 += 2; // Add 1 for null-terminator
+                varSize3 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var3 = (char*) malloc(varSize3 * sizeof(char));
                 snprintf(var3, sizeof(var3), "%%s%d", globalVar++);
 
@@ -347,37 +348,37 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
                 if(*hks_error==0)print(3,items2,file);
 
                 int varSize2 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize2 += 2; // Add 1 for null-terminator
+                varSize2 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var2 = (char*) malloc(varSize2 * sizeof(char));
                 snprintf(var2, sizeof(var2), "%%s%d", globalVar++);
                 char* items3[4] = {var2,"lshr",p1,p2};
                 if(*hks_error==0)print(3,items3,file);
 
                 int varSize4 = snprintf(NULL, 0, "s%d", globalVar);
-                varSize4 += 2; // Add 1 for null-terminator
+                varSize4 += 2; // Add 2 for null-terminator and s at the beginning of the variable
                 char *var4 = (char*) malloc(varSize4 * sizeof(char));
                 snprintf(var4, sizeof(var4), "%%s%d", globalVar++);
                 char* items4[4] = {var4,"shl",p1,var3};
-                if(*hks_error==0)print(3,items4,file);
+                if(*hks_error==0)print(3,items4,file);//llvm code line is printed to the file
 
                 char* items[4] = {*p,"or",var2,var4};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);//llvm code line is printed to the file
 
                 return ans;
             }else if(strcmp("&",temp)==0){
                 ans=(postfix(map, stack, hks_error, &p1,file) & postfix(map, stack, hks_error, &p2,file));
                 char* items[4] = {*p,"and",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);//llvm code line is printed to the file
                 return ans;
             }else if(strcmp("xor",temp)==0){
                 ans=(postfix(map, stack, hks_error, &p1,file) ^ postfix(map, stack, hks_error, &p2,file));
                 char* items[4] = {*p,"xor",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);//llvm code line is printed to the file
                 return ans;
             }else if(strcmp("|",temp)==0){
                 ans=(postfix(map, stack, hks_error, &p1,file) | postfix(map, stack, hks_error, &p2,file));
                 char* items[4] = {*p,"or",p1,p2};
-                if(*hks_error==0)print(3,items,file);
+                if(*hks_error==0)print(3,items,file);//llvm code line is printed to the file
                 return ans;
             }else{
                 return 0;
@@ -1041,6 +1042,9 @@ char* parseAfterLeftStrip (char *side) {
     return equation;
 }
 void print(int num, char* items[], FILE *file) {
+    //prints the llvm codeline to the file 
+    //num indicates the operation to be done
+    // items are the arguments to be printed
     switch (num) {
         case 0: //alloca
             fprintf(file, "%%%s = alloca i32\n", items[0]);
