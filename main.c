@@ -390,7 +390,7 @@ long long postfix(Map *map, Stack *stack, int *hks_error, char** p, FILE *file) 
 char* parseAfterLeftStrip (char *side);
 
 int main(int argc, char* argv[]) {
-    bool globalerror;
+    bool globalerror; //this will be turned true in case of an error and will delete the created file at the end
     bool error;
     bool equals;
     Map* HashMap = HashMap_construct();//this hashmap contains variables and their corresponding value
@@ -399,9 +399,7 @@ int main(int argc, char* argv[]) {
     char* out = malloc(sizeof(char )* (strlen(argv[1])+1));
     snprintf(out,strlen(argv[1])+1,"%s.ll",strtok(fileName,"."));
     FILE *input = fopen(argv[1],"r");
-    //FILE *input = fopen("file.adv","r");
     FILE *output = fopen(out,"ab+");
-    //FILE *output = fopen("file.ll","w");
     fprintf(output, "; ModuleID = 'advcalc2ir'\ndeclare i32 @printf(i8*, ...)\n@print.str = constant [4 x i8] c\"%%d\\0A\\00\"\n\ndefine i32 @main() {\n");
     char line[256];
     for (int lineNo=1; fgets(line, sizeof(line), input) != NULL; lineNo++) {
@@ -415,16 +413,12 @@ int main(int argc, char* argv[]) {
         equals = false;
         char *str = "\n";
         line[strlen(line)] = '\n';
-//        char *line = malloc(strlen(line1)+strlen(str)+1);
-//        strcat(line, line1);
-//        strcat(line, str);
         char *p = line;
         int par = 0;
         bool ch = false;
         bool sp = false;
         bool nu = false;
         // in this loop we traverse through the input
-
         while (*p != '\n') {
             if (*p == '=') {
             // when we see equals sign we approve that the input is an assignment input, this boolean will be used later
